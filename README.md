@@ -1,4 +1,4 @@
-# Campus Borrowing Platform 🎓
+# CampusSwap 🎓
 
 **Team ErRor_404** - InnoVedam Hackathon Project
 
