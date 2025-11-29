@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ArrowRightLeft, 
   Mail, 
@@ -14,6 +17,7 @@ import {
 } from 'lucide-react';
 
 const CampusSwapLogin = () => {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [currentActivity, setCurrentActivity] = useState(0);
@@ -48,6 +52,8 @@ const CampusSwapLogin = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('Login attempted with:', email, password);
+    // Simulate login and redirect to dashboard
+    router.push('/dashboard');
   };
 
   const activity = activities[currentActivity];
