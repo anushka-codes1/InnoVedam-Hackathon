@@ -1,0 +1,57 @@
+{
+	"name": "campus-borrowing-platform",
+	"version": "1.0.0",
+	"description": "Revolutionary peer-to-peer item borrowing platform for campus communities",
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+		"format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+	},
+	"dependencies": {
+		"@supabase/supabase-js": "^2.86.0",
+		"axios": "^1.13.2",
+		"next": "^14.2.0",
+		"react": "^18.3.0",
+		"react-dom": "^18.3.0",
+		"qrcode": "^1.5.3",
+		"qrcode.react": "^4.2.0",
+		"react-qr-reader": "3.0.0-beta-1",
+		"stripe": "^20.0.0",
+		"uuid": "^13.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"@types/react": "^18.3.0",
+		"@types/react-dom": "^18.3.0",
+		"@types/uuid": "^10.0.0",
+		"@types/qrcode": "^1.5.5",
+		"autoprefixer": "^10.4.22",
+		"eslint": "^9.39.1",
+		"eslint-config-next": "^14.2.0",
+		"postcss": "^8.5.6",
+		"prettier": "^3.7.2",
+		"tailwindcss": "^4.1.17",
+		"typescript": "^5.5.0"
+	},
+	"engines": {
+		"node": ">=18.0.0",
+		"pnpm": ">=8.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/anushka-codes1/InnoVedam-Hackathon.git"
+	},
+	"keywords": [
+		"campus",
+		"borrowing",
+		"peer-to-peer",
+		"sharing-economy",
+		"stripe",
+		"supabase",
+		"qr-code"
+	],
+	"author": "Team ErRor_404",
+	"license": "MIT"
+}
