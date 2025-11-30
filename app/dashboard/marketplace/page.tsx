@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Search, 
   Filter, 
@@ -16,11 +17,27 @@ import {
 import Link from 'next/link';
 
 export default function Marketplace() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [userListedItems, setUserListedItems] = useState<any[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const userEmail = localStorage.getItem('userEmail');
+      const authUser = localStorage.getItem('authUser');
+      
+      if (!userEmail && !authUser) {
+        // User is not logged in, redirect to login
+        router.push('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     // Load user-listed items from localStorage

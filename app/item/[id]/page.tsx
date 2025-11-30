@@ -281,6 +281,21 @@ export default function ItemDetailsPage() {
   const item = mockItems[itemId] || mockItems['1'];
   const sortedLenders = [...mockLenders].sort((a, b) => b.trustScore - a.trustScore);
 
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const userEmail = localStorage.getItem('userEmail');
+      const authUser = localStorage.getItem('authUser');
+      
+      if (!userEmail && !authUser) {
+        // User is not logged in, redirect to login
+        router.push('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
   // Check premium status
   useEffect(() => {
     const checkPremiumStatus = () => {

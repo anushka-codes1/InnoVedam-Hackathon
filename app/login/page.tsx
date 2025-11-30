@@ -395,13 +395,12 @@ const CampusSwapLogin = () => {
             const newGradient = gradientMap[item.color] || 'from-blue-400/30 to-cyan-400/30';
             
             return (
-              <Link
+              <div
                 key={index}
-                href={`/item/${item.id}`}
                 className={`
                   group relative bg-gradient-to-br ${newGradient} backdrop-blur-xl p-6
                   rounded-3xl shadow-xl border border-white/50
-                  hover:scale-105 transition-transform duration-300 cursor-pointer block
+                  transition-transform duration-300 cursor-default
                 `}
               >
                 {/* Card Content */}
@@ -420,7 +419,7 @@ const CampusSwapLogin = () => {
                   <p className="text-3xl font-black text-gray-900">{item.price}</p>
                   <p className="text-sm text-gray-600 mt-1">Available now</p>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
