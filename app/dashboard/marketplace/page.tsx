@@ -23,6 +23,14 @@ export default function Marketplace() {
   const [userListedItems, setUserListedItems] = useState<any[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    showOnlyAvailable: false,
+    showOnlyTrending: false,
+    minRating: 0,
+    maxPrice: Infinity,
+    maxDistance: Infinity
+  });
 
   // Check authentication on mount
   useEffect(() => {
@@ -203,8 +211,34 @@ export default function Marketplace() {
   const filteredItems = allItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || item.category.toLowerCase() === selectedCategory.toLowerCase();
-    return matchesSearch && matchesCategory;
+    const matchesAvailable = !filters.showOnlyAvailable || item.available;
+    const matchesTrending = !filters.showOnlyTrending || item.trending;
+    const matchesRating = item.rating >= filters.minRating;
+    const matchesPrice = item.price <= filters.maxPrice;
+    
+    // Parse distance (e.g., "0.5 km" -> 0.5)
+    const distanceValue = parseFloat(item.distance);
+    const matchesDistance = isNaN(distanceValue) || distanceValue <= filters.maxDistance;
+    
+    return matchesSearch && matchesCategory && matchesAvailable && matchesTrending && matchesRating && matchesPrice && matchesDistance;
   });
+
+  const resetFilters = () => {
+    setFilters({
+      showOnlyAvailable: false,
+      showOnlyTrending: false,
+      minRating: 0,
+      maxPrice: Infinity,
+      maxDistance: Infinity
+    });
+  };
+
+  const hasActiveFilters = 
+    filters.showOnlyAvailable || 
+    filters.showOnlyTrending || 
+    filters.minRating > 0 || 
+    filters.maxPrice !== Infinity || 
+    filters.maxDistance !== Infinity;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FFE5D9] to-[#E8D5F2] pb-20">
@@ -255,11 +289,118 @@ export default function Marketplace() {
           <p className="text-sm text-gray-600">
             {filteredItems.length} items available
           </p>
-          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 transition-colors">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 text-sm transition-colors ${
+              hasActiveFilters 
+                ? 'text-purple-600 font-semibold' 
+                : 'text-gray-600 hover:text-purple-600'
+            }`}
+          >
             <Filter className="w-4 h-4" />
             Filters
+            {hasActiveFilters && (
+              <span className="bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                !
+              </span>
+            )}
           </button>
         </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="bg-white/70 backdrop-blur-xl rounded-xl p-6 mb-6 shadow-sm border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Filter Options</h3>
+              {hasActiveFilters && (
+                <button
+                  onClick={resetFilters}
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  Reset All
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Toggle Filters */}
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.showOnlyAvailable}
+                    onChange={(e) => setFilters({ ...filters, showOnlyAvailable: e.target.checked })}
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm text-gray-700">Available only</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.showOnlyTrending}
+                    onChange={(e) => setFilters({ ...filters, showOnlyTrending: e.target.checked })}
+                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm text-gray-700">Trending only</span>
+                </label>
+              </div>
+
+              {/* Rating Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minimum Rating: {filters.minRating.toFixed(1)} ⭐
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={filters.minRating}
+                  onChange={(e) => setFilters({ ...filters, minRating: parseFloat(e.target.value) })}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+              </div>
+
+              {/* Price Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Price: {filters.maxPrice === Infinity ? 'Any' : `₹${filters.maxPrice}`}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="10"
+                  value={filters.maxPrice === Infinity ? 200 : filters.maxPrice}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setFilters({ ...filters, maxPrice: value === 200 ? Infinity : value });
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+              </div>
+
+              {/* Distance Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Distance: {filters.maxDistance === Infinity ? 'Any' : `${filters.maxDistance} km`}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={filters.maxDistance === Infinity ? 5 : filters.maxDistance}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setFilters({ ...filters, maxDistance: value === 5 ? Infinity : value });
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
