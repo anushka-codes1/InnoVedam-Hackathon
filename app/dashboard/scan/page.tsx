@@ -34,8 +34,8 @@ export default function QRScanner() {
         setScanResult('success');
         setTransactionDetails({
           item: 'Chemistry Textbook',
-          owner: 'Sarah Martinez',
-          borrower: 'John Doe',
+          owner: 'Aaryaa Newaskar',
+          borrower: 'Md. Hayat Mallick',
           amount: 45,
           date: new Date().toLocaleDateString(),
           transactionId: 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase()
@@ -54,9 +54,9 @@ export default function QRScanner() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FFE5D9] to-[#E8D5F2]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -92,16 +92,16 @@ export default function QRScanner() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button
                 onClick={() => setScanMode('handoff')}
-                className="bg-white rounded-xl p-8 border-2 border-emerald-200 hover:border-emerald-400 hover:shadow-lg transition-all text-left"
+                className="bg-white/70 backdrop-blur-xl rounded-xl p-8 border-2 border-purple-200 hover:border-purple-400 hover:shadow-xl transition-all text-left"
               >
-                <div className="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                  <QrCode className="w-8 h-8 text-emerald-600" />
+                <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                  <QrCode className="w-8 h-8 text-purple-600" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Handoff Verification</h2>
                 <p className="text-gray-600 mb-4">
                   Scan QR code to confirm item handoff to borrower
                 </p>
-                <div className="flex items-center gap-2 text-emerald-600 font-medium">
+                <div className="flex items-center gap-2 text-purple-600 font-medium">
                   <Scan className="w-5 h-5" />
                   Start Scanning
                 </div>
@@ -109,16 +109,16 @@ export default function QRScanner() {
 
               <button
                 onClick={() => setScanMode('return')}
-                className="bg-white rounded-xl p-8 border-2 border-blue-200 hover:border-blue-400 hover:shadow-lg transition-all text-left"
+                className="bg-white/70 backdrop-blur-xl rounded-xl p-8 border-2 border-pink-200 hover:border-pink-400 hover:shadow-xl transition-all text-left"
               >
-                <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                  <CheckCircle className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-pink-600" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Return Verification</h2>
                 <p className="text-gray-600 mb-4">
                   Scan QR code to confirm item return from borrower
                 </p>
-                <div className="flex items-center gap-2 text-blue-600 font-medium">
+                <div className="flex items-center gap-2 text-pink-600 font-medium">
                   <Scan className="w-5 h-5" />
                   Start Scanning
                 </div>
@@ -129,7 +129,7 @@ export default function QRScanner() {
           /* Scan Result */
           <div className="space-y-6">
             {scanResult === 'success' ? (
-              <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl p-8 shadow-sm border border-white/20">
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-10 h-10 text-green-600" />
@@ -163,7 +163,7 @@ export default function QRScanner() {
                     
                     <div className="flex justify-between">
                       <span className="text-gray-600">Amount</span>
-                      <span className="font-medium text-emerald-600">₹{transactionDetails.amount}</span>
+                      <span className="font-medium text-purple-600">₹{transactionDetails.amount}</span>
                     </div>
                     
                     <div className="flex justify-between">
@@ -205,7 +205,7 @@ export default function QRScanner() {
                 <div className="mt-6 flex gap-4">
                   <Link
                     href="/dashboard"
-                    className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-center"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all text-center"
                   >
                     Back to Dashboard
                   </Link>
@@ -219,7 +219,7 @@ export default function QRScanner() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl p-8 shadow-sm border border-white/20">
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <XCircle className="w-10 h-10 text-red-600" />
@@ -257,7 +257,7 @@ export default function QRScanner() {
                       setScanResult(null);
                       setScanning(false);
                     }}
-                    className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
                   >
                     <RefreshCw className="w-5 h-5" />
                     Try Again
@@ -268,7 +268,7 @@ export default function QRScanner() {
           </div>
         ) : (
           /* Scanning State */
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+          <div className="bg-white/70 backdrop-blur-xl rounded-xl p-8 shadow-sm border border-white/20">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {scanMode === 'handoff' ? 'Scanning for Handoff' : 'Scanning for Return'}
@@ -282,9 +282,9 @@ export default function QRScanner() {
                 <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center relative overflow-hidden">
                   {scanning ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-full h-1 bg-emerald-500 animate-pulse"></div>
+                      <div className="w-full h-1 bg-purple-500 animate-pulse"></div>
                       <div className="absolute w-16 h-16">
-                        <RefreshCw className="w-16 h-16 text-emerald-600 animate-spin" />
+                        <RefreshCw className="w-16 h-16 text-purple-600 animate-spin" />
                       </div>
                     </div>
                   ) : (
@@ -292,17 +292,17 @@ export default function QRScanner() {
                   )}
                   
                   {/* Corner Brackets */}
-                  <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-emerald-500 rounded-tl-lg"></div>
-                  <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-emerald-500 rounded-tr-lg"></div>
-                  <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-emerald-500 rounded-bl-lg"></div>
-                  <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-emerald-500 rounded-br-lg"></div>
+                  <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-purple-500 rounded-tl-lg"></div>
+                  <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-purple-500 rounded-tr-lg"></div>
+                  <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-purple-500 rounded-bl-lg"></div>
+                  <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-purple-500 rounded-br-lg"></div>
                 </div>
               </div>
 
               {!scanning && (
                 <button
                   onClick={handleScan}
-                  className="px-8 py-4 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 mx-auto mb-4"
+                  className="px-8 py-4 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 mx-auto mb-4"
                 >
                   <Scan className="w-5 h-5" />
                   Start Scanning
@@ -310,7 +310,7 @@ export default function QRScanner() {
               )}
 
               {scanning && (
-                <p className="text-emerald-600 font-medium animate-pulse">
+                <p className="text-purple-600 font-medium animate-pulse">
                   Scanning in progress...
                 </p>
               )}

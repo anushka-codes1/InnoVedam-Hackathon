@@ -1,0 +1,46 @@
+/* The path definition matches the SVG 'd' attribute above exactly.
+   M 20,48 -> Start Left Middle
+   C ... -> Curve Top
+   C ... -> Curve Bottom
+   Z -> Close loop
+*/
+:root {
+  --orbit-path: path("M 20, 48 C 20, 10, 236, 10, 236, 48 C 236, 86, 20, 86, 20, 48 Z");
+}
+
+@keyframes follow-orbit {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+.animate-bee-orbit {
+  offset-path: var(--orbit-path);
+  offset-rotate: auto; /* Aligns rotation to the path direction */
+  animation: follow-orbit 8s linear infinite;
+}
+
+.animate-robot-orbit {
+  offset-path: var(--orbit-path);
+  offset-rotate: auto;
+  animation: follow-orbit 8s linear infinite;
+  animation-delay: 1s; /* Delays the robot to create the chase */
+}
+
+/* Bobbing effect to simulate flying hover */
+@keyframes bob {
+  0%, 100% { transform: translateY(-3px) rotate(90deg); }
+  50% { transform: translateY(3px) rotate(90deg); }
+}
+
+.animate-bob {
+  animation: bob 1.5s ease-in-out infinite;
+}
+
+/* Stronger pulse for better visibility */
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}

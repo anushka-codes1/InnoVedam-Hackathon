@@ -6,16 +6,19 @@ import {
   Upload,
   Camera,
   Tag,
-  DollarSign,
+  IndianRupee,
   Calendar,
   MapPin,
   AlertCircle,
   CheckCircle,
-  Package
+  Package,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function CreateItem() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -26,11 +29,16 @@ export default function CreateItem() {
     availableTo: '',
     meetingPoint: '',
     requiresCollateral: false,
-    collateralAmount: ''
+    collateralAmount: '',
+    image: ''
   });
 
   const [step, setStep] = useState(1);
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const categories = [
     { name: 'Books & Textbooks', icon: '📚' },
@@ -42,6 +50,43 @@ export default function CreateItem() {
   ];
 
   const conditions = ['Brand New', 'Like New', 'Good', 'Fair', 'Well-Used'];
+
+  const campusSpots = [
+    'Main Library Entrance',
+    'Central Cafeteria',
+    'Student Center Lobby',
+    'Academic Block A Gate',
+    'Sports Complex Entrance',
+    'Hostel Common Room',
+    'Tech Park Courtyard',
+    'Admin Building Reception',
+    'Auditorium Foyer',
+    'Campus Bookstore'
+  ];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImageFile(null);
+    setFormData(prev => ({ ...prev, image: '' }));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -82,17 +127,87 @@ export default function CreateItem() {
     setSuggestedPrice(Math.round(basePrice * multiplier));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Would call API here
-    setStep(4);
+    
+    // Clear any previous errors
+    setApiError(null);
+    setIsLoading(true);
+
+    try {
+      // Prepare data for API - map form fields to API expected format
+      const apiData = {
+        name: formData.name,
+        category: formData.category.replace(' & Textbooks', '').replace('Books', 'Books'),
+        condition: formData.condition,
+        pricePerDay: formData.pricePerDay,
+        description: formData.description,
+        availableFrom: formData.availableFrom,
+        availableTo: formData.availableTo,
+        meetingPoint: formData.meetingPoint,
+        requiresCollateral: formData.requiresCollateral,
+        collateralAmount: formData.collateralAmount
+      };
+
+      // Call backend API
+      const response = await fetch('/api/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(apiData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        // API returned an error
+        const errorMessage = result.error || 'Failed to create item';
+        const validationErrors = result.errors?.map((err: any) => `${err.field}: ${err.message}`).join(', ');
+        throw new Error(validationErrors || errorMessage);
+      }
+
+      console.log('✅ Item created successfully:', result);
+      console.log('Item ID:', result.itemId);
+
+      // Save item to localStorage for marketplace (backward compatibility)
+      const existingItems = JSON.parse(localStorage.getItem('userListedItems') || '[]');
+      const newItem = {
+        id: result.itemId || Date.now(),
+        name: formData.name,
+        price: parseInt(formData.pricePerDay),
+        owner: 'You',
+        rating: 5.0,
+        distance: '0 km',
+        category: formData.category.replace(' & Textbooks', ''),
+        image: formData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop',
+        available: true,
+        trending: false,
+        condition: formData.condition,
+        description: formData.description,
+        meetingPoint: formData.meetingPoint,
+        requiresCollateral: formData.requiresCollateral,
+        collateralAmount: formData.collateralAmount
+      };
+      
+      existingItems.push(newItem);
+      localStorage.setItem('userListedItems', JSON.stringify(existingItems));
+      
+      // Move to success screen
+      setStep(4);
+
+    } catch (error: any) {
+      console.error('❌ Error creating item:', error);
+      setApiError(error.message || 'Failed to create item. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FFE5D9] to-[#E8D5F2] pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -110,7 +225,7 @@ export default function CreateItem() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium text-emerald-600">
+            <span className="text-sm font-medium text-purple-600">
               {step === 1 && 'Basic Information'}
               {step === 2 && 'Pricing & Availability'}
               {step === 3 && 'Additional Details'}
@@ -118,9 +233,9 @@ export default function CreateItem() {
             </span>
             <span className="text-sm text-gray-600">{Math.round((step / 3) * 100)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-white/50 rounded-full h-2">
             <div
-              className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
@@ -128,22 +243,22 @@ export default function CreateItem() {
 
         {step === 4 ? (
           /* Success Screen */
-          <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-600" />
+          <div className="bg-white/70 backdrop-blur-xl rounded-xl p-8 text-center shadow-sm border border-white/20">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-purple-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Item Listed Successfully!</h2>
             <p className="text-gray-600 mb-6">Your item is now visible to other students on campus</p>
             <div className="flex gap-4 justify-center">
               <Link
                 href="/dashboard"
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                className="px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all"
               >
                 Back to Dashboard
               </Link>
               <Link
                 href="/dashboard/marketplace"
-                className="px-6 py-3 bg-white border-2 border-emerald-600 text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
+                className="px-6 py-3 bg-white/70 backdrop-blur-sm border-2 border-purple-600 text-purple-600 rounded-lg font-medium hover:bg-white/90 transition-colors"
               >
                 View Marketplace
               </Link>
@@ -153,16 +268,42 @@ export default function CreateItem() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Step 1: Basic Information */}
             {step === 1 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl p-6 shadow-sm border border-white/20 space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload Photos
+                    Upload Photos *
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer">
-                    <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 mb-1">Click to upload or drag and drop</p>
-                    <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
-                  </div>
+                  {!uploadedImage ? (
+                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-500 transition-colors cursor-pointer block">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 mb-1">Click to upload or drag and drop</p>
+                      <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
+                    </label>
+                  ) : (
+                    <div className="relative border-2 border-purple-500 rounded-lg overflow-hidden">
+                      <img
+                        src={uploadedImage}
+                        alt="Preview"
+                        className="w-full h-64 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-white/90 px-3 py-1 rounded-lg text-sm font-medium text-gray-700">
+                        {imageFile?.name}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -176,7 +317,7 @@ export default function CreateItem() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="e.g., Chemistry Textbook 12th Edition"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                 </div>
 
@@ -192,8 +333,8 @@ export default function CreateItem() {
                         onClick={() => setFormData(prev => ({ ...prev, category: cat.name }))}
                         className={`p-4 border-2 rounded-lg text-left transition-all ${
                           formData.category === cat.name
-                            ? 'border-emerald-500 bg-emerald-50'
-                            : 'border-gray-200 hover:border-emerald-300'
+                            ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50'
+                            : 'border-gray-200 hover:border-purple-300'
                         }`}
                       >
                         <span className="text-2xl mb-2 block">{cat.icon}</span>
@@ -212,7 +353,7 @@ export default function CreateItem() {
                     required
                     value={formData.condition}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
                     <option value="">Select condition</option>
                     {conditions.map((cond) => (
@@ -231,7 +372,7 @@ export default function CreateItem() {
                     onChange={handleInputChange}
                     rows={4}
                     placeholder="Describe your item, mention any special features or defects..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
                 </div>
               </div>
@@ -239,14 +380,14 @@ export default function CreateItem() {
 
             {/* Step 2: Pricing & Availability */}
             {step === 2 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl p-6 shadow-sm border border-white/20 space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price per Day *
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                      <DollarSign className="w-5 h-5 text-gray-400" />
+                      <IndianRupee className="w-5 h-5 text-gray-400" />
                     </div>
                     <input
                       type="number"
@@ -255,17 +396,17 @@ export default function CreateItem() {
                       value={formData.pricePerDay}
                       onChange={handleInputChange}
                       placeholder="0"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                   {suggestedPrice && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-emerald-600">
+                    <div className="mt-2 flex items-center gap-2 text-sm text-purple-600">
                       <Tag className="w-4 h-4" />
                       <span>Suggested price: ₹{suggestedPrice}/day</span>
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, pricePerDay: suggestedPrice.toString() }))}
-                        className="underline hover:text-emerald-700"
+                        className="underline hover:text-purple-700"
                       >
                         Use this
                       </button>
@@ -283,7 +424,7 @@ export default function CreateItem() {
                       name="availableFrom"
                       value={formData.availableFrom}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                   <div>
@@ -295,33 +436,38 @@ export default function CreateItem() {
                       name="availableTo"
                       value={formData.availableTo}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Meeting Point
+                    Preferred Meeting Point *
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <select
                       name="meetingPoint"
+                      required
                       value={formData.meetingPoint}
                       onChange={handleInputChange}
-                      placeholder="e.g., Library entrance, Cafeteria"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                    />
+                      className="w-full pl-10 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 appearance-none"
+                    >
+                      <option value="">Select a popular campus spot</option>
+                      {campusSpots.map((spot) => (
+                        <option key={spot} value={spot}>{spot}</option>
+                      ))}
+                    </select>
                   </div>
+                  <p className="mt-2 text-xs text-gray-500">Choose a well-known location on campus for easy meetup</p>
                 </div>
               </div>
             )}
 
             {/* Step 3: Additional Details */}
             {step === 3 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+              <div className="bg-white/70 backdrop-blur-xl rounded-xl p-6 shadow-sm border border-white/20 space-y-6">
                 <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
@@ -345,7 +491,7 @@ export default function CreateItem() {
                       onChange={handleInputChange}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-pink-600"></div>
                   </label>
                 </div>
 
@@ -360,14 +506,14 @@ export default function CreateItem() {
                       value={formData.collateralAmount}
                       onChange={handleInputChange}
                       placeholder="Enter amount in ₹"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                 )}
 
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <h3 className="font-medium text-emerald-900 mb-2">Platform Features</h3>
-                  <ul className="space-y-2 text-sm text-emerald-700">
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
+                  <h3 className="font-medium text-purple-900 mb-2">Platform Features</h3>
+                  <ul className="space-y-2 text-sm text-purple-700">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       QR code verification for safe handoff
@@ -404,17 +550,18 @@ export default function CreateItem() {
                 <button
                   type="button"
                   onClick={() => setStep(step + 1)}
-                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all"
                 >
                   Continue
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                  disabled={isLoading}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <Package className="w-5 h-5" />
-                  List Item
+                  {isLoading ? 'Listing...' : 'List Item'}
                 </button>
               )}
             </div>

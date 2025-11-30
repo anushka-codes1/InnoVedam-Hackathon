@@ -1,0 +1,24 @@
+/* Logo Orbit Animation Styles */
+
+/* Define the path variable matching the SVG 'd' EXACTLY */
+:root {
+  --logo-orbit: path("M 0,30 Q 130,-15 260,30 Q 130,75 0,30 Z");
+}
+
+@keyframes travel-orbit {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+.animate-orbit-plane {
+  offset-path: var(--logo-orbit);
+  offset-rotate: auto; /* Aligns rotation to path direction */
+  animation: travel-orbit 8s linear infinite;
+}
+
+.animate-orbit-coin {
+  offset-path: var(--logo-orbit);
+  offset-rotate: 0deg; /* Keeps the coin upright */
+  animation: travel-orbit 8s linear infinite;
+  animation-delay: -4s; /* Start halfway through the loop (opposite side) */
+}

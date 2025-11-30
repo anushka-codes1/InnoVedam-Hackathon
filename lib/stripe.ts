@@ -13,6 +13,20 @@ export const PLATFORM_FEES = {
   CONVENIENCE_PICKUP_SHARE: 4.00, // ₹4 goes to platform from ₹20
 };
 
+// Premium subscription pricing
+export const PREMIUM_PRICING = {
+  MONTHLY: 199.00,
+  YEARLY: 1999.00,
+};
+
+export interface PremiumPaymentData {
+  amount: number;
+  userId: string;
+  planType: 'monthly' | 'yearly';
+  userEmail: string;
+  userName: string;
+}
+
 export interface PaymentIntentData {
   amount: number;
   borrowerId: string;
@@ -350,13 +364,89 @@ export const verifyPaymentStatus = async (paymentIntentId: string) => {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
     return {
+      success: true,
       status: paymentIntent.status,
       amount: paymentIntent.amount / 100,
-      captured: paymentIntent.status === 'succeeded',
-      requiresAction: paymentIntent.status === 'requires_action',
+      paymentIntent,
     };
   } catch (error) {
-    console.error('Error verifying payment status:', error);
+    console.error('Error verifying payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create Premium Subscription Payment Intent
+ * One-time payment for premium subscription
+ */
+export const createPremiumPayment = async (data: PremiumPaymentData) => {
+  const {
+    amount,
+    userId,
+    planType,
+    userEmail,
+    userName,
+  } = data;
+
+  try {
+    // Create a Payment Intent for immediate capture
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to paise
+      currency: 'inr',
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        type: 'premium_subscription',
+        userId,
+        planType,
+        userName,
+        userEmail,
+        purchaseDate: new Date().toISOString(),
+      },
+      description: `CampusSwap Premium - ${planType === 'monthly' ? 'Monthly' : 'Yearly'} Subscription`,
+      receipt_email: userEmail,
+    });
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      amount: amount,
+      planType,
+    };
+  } catch (error) {
+    console.error('Error creating premium payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Confirm Premium Payment
+ * Called after successful payment to activate premium
+ */
+export const confirmPremiumPayment = async (paymentIntentId: string) => {
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status === 'succeeded') {
+      return {
+        success: true,
+        status: 'confirmed',
+        userId: paymentIntent.metadata.userId,
+        planType: paymentIntent.metadata.planType,
+        amount: paymentIntent.amount / 100,
+        paymentId: paymentIntent.id,
+      };
+    }
+
+    return {
+      success: false,
+      status: paymentIntent.status,
+      error: 'Payment not completed',
+    };
+  } catch (error) {
+    console.error('Error confirming premium payment:', error);
     throw error;
   }
 };
