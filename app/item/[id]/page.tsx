@@ -275,14 +275,48 @@ export default function ItemDetailsPage() {
   const [messages, setMessages] = useState<Array<{ text: string; sender: 'user' | 'ai' | 'lender' }>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   const item = mockItems[itemId] || mockItems['1'];
   const sortedLenders = [...mockLenders].sort((a, b) => b.trustScore - a.trustScore);
 
+  // Check premium status
+  useEffect(() => {
+    const checkPremiumStatus = () => {
+      try {
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          const subscriptions = JSON.parse(localStorage.getItem('premiumSubscriptions') || '{}');
+          const userSubscription = subscriptions[userEmail];
+          
+          if (userSubscription && userSubscription.active) {
+            const expiryDate = new Date(userSubscription.expiryDate);
+            const now = new Date();
+            setIsPremium(expiryDate > now);
+          } else {
+            setIsPremium(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking premium status:', error);
+        setIsPremium(false);
+      }
+    };
+    
+    checkPremiumStatus();
+  }, []);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Reset priority delivery if user is not premium
+  useEffect(() => {
+    if (selectedDeliveryMethod === 'priority-delivery' && !isPremium) {
+      setSelectedDeliveryMethod('self-pickup');
+    }
+  }, [isPremium, selectedDeliveryMethod]);
 
   // Calculate dates based on rental duration
   useEffect(() => {
@@ -332,6 +366,12 @@ export default function ItemDetailsPage() {
   };
 
   const handlePaymentComplete = () => {
+    // Validate: Non-premium users cannot use priority delivery
+    if (selectedDeliveryMethod === 'priority-delivery' && !isPremium) {
+      alert('⚠️ Priority Delivery is a Premium feature. Please upgrade to Premium or select another delivery option.');
+      return;
+    }
+
     // Calculate total amount with delivery fees
     let totalAmount = selectedOption === 'borrow' 
       ? (item.borrowPrice * rentalDuration) + 60 
@@ -1102,11 +1142,17 @@ export default function ItemDetailsPage() {
 
                 {/* Priority Delivery */}
                 <div
-                  onClick={() => setSelectedDeliveryMethod('priority-delivery')}
-                  className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                    selectedDeliveryMethod === 'priority-delivery'
-                      ? 'border-purple-600 bg-purple-50'
-                      : 'border-gray-200 hover:border-purple-300'
+                  onClick={() => {
+                    if (isPremium) {
+                      setSelectedDeliveryMethod('priority-delivery');
+                    }
+                  }}
+                  className={`border-2 rounded-xl p-4 transition-all ${
+                    !isPremium 
+                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60' 
+                      : selectedDeliveryMethod === 'priority-delivery'
+                        ? 'border-purple-600 bg-purple-50 cursor-pointer'
+                        : 'border-gray-200 hover:border-purple-300 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -1124,17 +1170,29 @@ export default function ItemDetailsPage() {
                           Priority Delivery
                           <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full font-bold">PREMIUM</span>
                         </p>
-                        <p className="text-xs text-gray-500">Lender delivers directly to you within 1 hour</p>
+                        <p className="text-xs text-gray-500">
+                          {isPremium 
+                            ? 'Lender delivers directly to you within 1 hour'
+                            : '🔒 Upgrade to Premium to unlock 1-hour priority delivery'
+                          }
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-purple-600">
                       <span className="text-sm font-bold">₹50</span>
                     </div>
                   </div>
-                  {selectedDeliveryMethod === 'priority-delivery' && (
+                  {selectedDeliveryMethod === 'priority-delivery' && isPremium && (
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 mt-3">
                       <p className="text-xs text-purple-700">
                         <span className="font-semibold">⚡ Lightning Fast!</span> {selectedLender?.name || 'The lender'} will deliver the item directly to your location within 1 hour.
+                      </p>
+                    </div>
+                  )}
+                  {!isPremium && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 mt-3">
+                      <p className="text-xs text-orange-700">
+                        <span className="font-semibold">✨ Premium Feature</span> Upgrade to Premium for instant 1-hour delivery access. <button onClick={() => router.push('/dashboard/premium')} className="underline font-semibold">Upgrade Now</button>
                       </p>
                     </div>
                   )}
@@ -1157,7 +1215,8 @@ export default function ItemDetailsPage() {
                 onClick={handlePaymentComplete}
                 disabled={
                   !selectedPaymentMethod || 
-                  (selectedDeliveryMethod === 'campus-courier' && !selectedCourier)
+                  (selectedDeliveryMethod === 'campus-courier' && !selectedCourier) ||
+                  (selectedDeliveryMethod === 'priority-delivery' && !isPremium)
                 }
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >

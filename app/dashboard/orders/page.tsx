@@ -282,7 +282,7 @@ Thank you for using CampusSwap!
                         <div>
                           <p className="text-sm text-gray-600 mb-1">Total Amount</p>
                           <p className="text-2xl font-bold text-gray-900">
-                            ₹{order.amount.toFixed(2)}
+                            ₹{order.amount ? order.amount.toFixed(2) : '0.00'}
                           </p>
                         </div>
                         <button
