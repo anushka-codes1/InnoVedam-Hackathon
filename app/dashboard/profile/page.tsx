@@ -55,9 +55,12 @@ export default function Profile() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   
   // Notification settings
-  const [pushNotifications, setPushNotifications] = useState(
-    localStorage.getItem('pushNotifications') === 'true'
-  );
+  const [pushNotifications, setPushNotifications] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('pushNotifications') === 'true';
+    }
+    return false;
+  });
   
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -68,9 +71,12 @@ export default function Profile() {
   const [passwordError, setPasswordError] = useState('');
   
   // 2FA state
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(
-    localStorage.getItem('twoFactorEnabled') === 'true'
-  );
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('twoFactorEnabled') === 'true';
+    }
+    return false;
+  });
 
   const userData = {
     name: contextUserData?.fullName || 'Anushka Mukherjee',
