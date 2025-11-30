@@ -97,10 +97,23 @@ export default function CreateItem() {
       [name]: type === 'checkbox' ? checked : value
     }));
 
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError(null);
+    }
+
     // Auto-suggest price based on category and condition
     if ((name === 'category' || name === 'condition') && formData.category && formData.condition) {
       calculateSuggestedPrice(formData.category, formData.condition);
     }
+  };
+
+  const canProceedToStep2 = () => {
+    return formData.name.trim().length >= 3 && formData.category && formData.condition && formData.description.trim().length >= 10;
+  };
+
+  const canProceedToStep3 = () => {
+    return formData.pricePerDay && parseFloat(formData.pricePerDay) > 0 && formData.availableFrom && formData.availableTo && formData.meetingPoint;
   };
 
   const calculateSuggestedPrice = (category: string, condition: string) => {
@@ -135,19 +148,39 @@ export default function CreateItem() {
     setIsLoading(true);
 
     try {
+      // Map form values to API expected values
+      const categoryMap: { [key: string]: string } = {
+        'Books & Textbooks': 'Books',
+        'Electronics': 'Electronics',
+        'Furniture': 'Furniture',
+        'Sports Equipment': 'Sports',
+        'Musical Instruments': 'Others',
+        'Others': 'Others'
+      };
+
+      const conditionMap: { [key: string]: string } = {
+        'Brand New': 'New',
+        'Like New': 'Like New',
+        'Good': 'Good',
+        'Fair': 'Fair',
+        'Well-Used': 'Poor'
+      };
+
       // Prepare data for API - map form fields to API expected format
       const apiData = {
         name: formData.name,
-        category: formData.category.replace(' & Textbooks', '').replace('Books', 'Books'),
-        condition: formData.condition,
+        category: categoryMap[formData.category] || 'Others',
+        condition: conditionMap[formData.condition] || 'Good',
         pricePerDay: formData.pricePerDay,
         description: formData.description,
         availableFrom: formData.availableFrom,
         availableTo: formData.availableTo,
         meetingPoint: formData.meetingPoint,
         requiresCollateral: formData.requiresCollateral,
-        collateralAmount: formData.collateralAmount
+        collateralAmount: formData.requiresCollateral ? formData.collateralAmount : '0'
       };
+
+      console.log('📤 Sending item data to API:', apiData);
 
       // Call backend API
       const response = await fetch('/api/items', {
@@ -364,16 +397,18 @@ export default function CreateItem() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    Description *
                   </label>
                   <textarea
                     name="description"
+                    required
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={4}
-                    placeholder="Describe your item, mention any special features or defects..."
+                    placeholder="Describe your item, mention any special features or defects... (minimum 10 characters)"
                     className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   />
+                  <p className="mt-1 text-xs text-gray-500">{formData.description.length} / 10 minimum characters</p>
                 </div>
               </div>
             )}
@@ -417,11 +452,12 @@ export default function CreateItem() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Available From
+                      Available From *
                     </label>
                     <input
                       type="date"
                       name="availableFrom"
+                      required
                       value={formData.availableFrom}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -429,11 +465,12 @@ export default function CreateItem() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Available Until
+                      Available Until *
                     </label>
                     <input
                       type="date"
                       name="availableTo"
+                      required
                       value={formData.availableTo}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-white/70 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -535,6 +572,17 @@ export default function CreateItem() {
               </div>
             )}
 
+            {/* Error Display */}
+            {apiError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium text-red-900 mb-1">Error Creating Item</h4>
+                  <p className="text-sm text-red-700">{apiError}</p>
+                </div>
+              </div>
+            )}
+
             {/* Navigation Buttons */}
             <div className="flex gap-4">
               {step > 1 && step < 4 && (
@@ -549,7 +597,17 @@ export default function CreateItem() {
               {step < 3 ? (
                 <button
                   type="button"
-                  onClick={() => setStep(step + 1)}
+                  onClick={() => {
+                    if (step === 1 && !canProceedToStep2()) {
+                      alert('Please fill in all required fields: Name (min 3 chars), Category, Condition, and Description (min 10 chars)');
+                      return;
+                    }
+                    if (step === 2 && !canProceedToStep3()) {
+                      alert('Please fill in all required fields: Price, Available From, Available Until, and Meeting Point');
+                      return;
+                    }
+                    setStep(step + 1);
+                  }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all"
                 >
                   Continue
