@@ -66,10 +66,29 @@ export default function MyListings() {
         if (storedListings) {
           setListings(JSON.parse(storedListings));
         } else {
-          // Initialize with empty array - no default Diya items
-          const initialListings: any[] = [];
-          setListings(initialListings);
-          localStorage.setItem('mockListings', JSON.stringify(initialListings));
+          // Check if there are items in userListedItems (old format) and migrate them
+          const userListedItems = localStorage.getItem('userListedItems');
+          if (userListedItems) {
+            const items = JSON.parse(userListedItems);
+            // Convert userListedItems format to mockListings format
+            const convertedListings = items.map((item: any) => ({
+              id: item.id || `ITEM-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+              title: item.name,
+              suggested_price: item.price,
+              is_available: item.available !== false,
+              category: item.category,
+              condition: item.condition || 'Good',
+              created_at: new Date().toISOString(),
+              images: item.image ? [item.image] : []
+            }));
+            setListings(convertedListings);
+            localStorage.setItem('mockListings', JSON.stringify(convertedListings));
+          } else {
+            // Initialize with empty array
+            const initialListings: any[] = [];
+            setListings(initialListings);
+            localStorage.setItem('mockListings', JSON.stringify(initialListings));
+          }
         }
         
         setUserId('mock-user-id');

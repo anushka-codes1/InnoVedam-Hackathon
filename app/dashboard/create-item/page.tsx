@@ -212,7 +212,7 @@ export default function CreateItem() {
         owner: 'You',
         rating: 5.0,
         distance: '0 km',
-        category: formData.category.replace(' & Textbooks', ''),
+        category: formData.category,
         image: formData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop',
         available: true,
         trending: false,
@@ -225,6 +225,21 @@ export default function CreateItem() {
       
       existingItems.push(newItem);
       localStorage.setItem('userListedItems', JSON.stringify(existingItems));
+
+      // Also save to mockListings for My Listings page
+      const mockListings = JSON.parse(localStorage.getItem('mockListings') || '[]');
+      const mockListingItem = {
+        id: result.itemId || `ITEM-${Date.now()}`,
+        title: formData.name,
+        suggested_price: parseInt(formData.pricePerDay),
+        is_available: true,
+        category: formData.category,
+        condition: formData.condition,
+        created_at: new Date().toISOString(),
+        images: formData.image ? [formData.image] : []
+      };
+      mockListings.push(mockListingItem);
+      localStorage.setItem('mockListings', JSON.stringify(mockListings));
       
       // Move to success screen
       setStep(4);
