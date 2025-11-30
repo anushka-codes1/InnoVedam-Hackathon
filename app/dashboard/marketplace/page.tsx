@@ -325,20 +325,22 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {item.owner === 'You' ? (
-                  <button
-                    onClick={(e) => handleDeleteClick(item, e)}
-                    className="w-full mt-4 bg-red-50 border border-red-200 text-red-600 py-2 rounded-lg font-medium hover:bg-red-100 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Item
-                  </button>
-                ) : item.available ? (
-                  <button className="w-full mt-4 bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white py-2 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Borrow Now
-                  </button>
-                ) : null}
+                <div className="mt-4">
+                  {item.owner === 'You' ? (
+                    <button
+                      onClick={(e) => handleDeleteClick(item, e)}
+                      className="w-full bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-lg font-medium hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Item
+                    </button>
+                  ) : item.available ? (
+                    <button className="w-full bg-gradient-to-r from-orange-400 via-pink-500 to-pink-600 text-white py-2.5 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      Borrow Now
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </Link>
           ))}
