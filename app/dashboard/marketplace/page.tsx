@@ -266,7 +266,7 @@ export default function Marketplace() {
             <Link
               key={item.id}
               href={`/item/${item.id}`}
-              className="bg-white/70 backdrop-blur-xl rounded-xl overflow-hidden shadow-sm border border-white/20 hover:shadow-xl hover:scale-105 transition-all duration-300"
+              className="bg-white/70 backdrop-blur-xl rounded-xl overflow-hidden shadow-sm border border-white/20 hover:shadow-xl hover:scale-105 transition-all duration-300 flex flex-col"
             >
               {/* Item Image */}
               <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100 overflow-hidden">
@@ -294,7 +294,7 @@ export default function Marketplace() {
               </div>
 
               {/* Item Details */}
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-gray-900 text-lg">{item.name}</h3>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -314,7 +314,7 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-4">
                   <div>
                     <p className="text-xs text-gray-500">Price per day</p>
                     <p className="text-xl font-bold text-purple-600">₹{item.price}</p>
@@ -325,7 +325,7 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-auto">
                   {item.owner === 'You' ? (
                     <button
                       onClick={(e) => handleDeleteClick(item, e)}
